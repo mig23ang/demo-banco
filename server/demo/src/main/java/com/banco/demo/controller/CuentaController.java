@@ -53,6 +53,7 @@ public class CuentaController {
         }
     }
 
+
     @PostMapping("/{id}/withdraw")
     public ResponseEntity<CuentaBancariaEntity> retirar(@PathVariable Long id, @RequestBody TransaccionEntity transaccion) {
         LOG.info("Inicia retirar cuenta CuentaController retirar ", id, transaccion);

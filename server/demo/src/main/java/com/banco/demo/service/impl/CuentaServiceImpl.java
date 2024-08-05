@@ -49,7 +49,6 @@ public class CuentaServiceImpl implements ICuentaService {
             throw new IllegalArgumentException("El tipo de transacción debe ser DEPOSITO");
         }
 
-
         CuentaBancariaEntity cuenta = cuentaBancariaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cuenta bancaria no encontrada"));
 
@@ -58,7 +57,7 @@ public class CuentaServiceImpl implements ICuentaService {
 
         cuentaBancariaRepository.save(cuenta);
 
-        transaccion.setCuentaBancaria(cuenta);
+        transaccion.setCuentaBancaria(cuenta); // No es necesario establecer esta propiedad si no se requiere en la base de datos
         transaccion.setFecha(LocalDateTime.now());
         transaccionRepository.save(transaccion);
 
@@ -69,8 +68,7 @@ public class CuentaServiceImpl implements ICuentaService {
     @Override
     @Transactional
     public CuentaBancariaEntity retirar(Long id, TransaccionEntity transaccion) {
-        LOG.info("Inicia retirar cuenta CuentaServiceImpl retirar {}", id);
-
+        LOG.info("Inicia retirar cuenta CuentaServiceImpl retirar ", id, transaccion);
         if (transaccion.getTipo() != Tipo.RETIRO) {
             throw new IllegalArgumentException("El tipo de transacción debe ser RETIRO");
         }
@@ -78,12 +76,10 @@ public class CuentaServiceImpl implements ICuentaService {
         CuentaBancariaEntity cuenta = cuentaBancariaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cuenta bancaria no encontrada"));
 
-        // Verifica si hay saldo suficiente para el retiro
-        if (cuenta.getSaldo().compareTo(transaccion.getMonto()) < 0) {
-            throw new IllegalArgumentException("Saldo insuficiente para realizar el retiro");
-        }
-
         BigDecimal nuevoSaldo = cuenta.getSaldo().subtract(transaccion.getMonto());
+        if (nuevoSaldo.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Saldo insuficiente para el retiro");
+        }
         cuenta.setSaldo(nuevoSaldo);
 
         cuentaBancariaRepository.save(cuenta);
@@ -92,7 +88,7 @@ public class CuentaServiceImpl implements ICuentaService {
         transaccion.setFecha(LocalDateTime.now());
         transaccionRepository.save(transaccion);
 
-        LOG.info("Finaliza retirar cuenta CuentaServiceImpl retirar {}", id);
+        LOG.info("Finaliza retirar cuenta CuentaServiceImpl retirar ", id, transaccion);
         return cuenta;
     }
 
