@@ -1,6 +1,7 @@
 package com.banco.demo.service.contract;
 
 import com.banco.demo.dao.entities.CuentaBancariaEntity;
+import com.banco.demo.dao.entities.TransaccionEntity;
 
 import java.math.BigDecimal;
 
@@ -17,20 +18,21 @@ public interface ICuentaService {
     /**
      * Realiza una consignación (depósito) en una cuenta bancaria.
      *
-     * @param id    El ID de la cuenta bancaria.
-     * @param monto El monto a consignar.
+     * @param id El ID de la cuenta bancaria.
+     * @param transaccion La transacción que contiene el monto a consignar.
      * @return La cuenta bancaria actualizada con el nuevo saldo.
      */
-    CuentaBancariaEntity depositar(Long id, BigDecimal monto);
+    CuentaBancariaEntity depositar(Long id, TransaccionEntity transaccion);
+
 
     /**
      * Realiza un retiro en una cuenta bancaria.
      *
      * @param id    El ID de la cuenta bancaria.
-     * @param monto El monto a retirar.
+     * @param transaccion El monto a retirar.
      * @return La cuenta bancaria actualizada con el nuevo saldo.
      */
-    CuentaBancariaEntity retirar(Long id, BigDecimal monto);
+    CuentaBancariaEntity retirar(Long id, TransaccionEntity transaccion);
 
     /**
      * Consulta el saldo de una cuenta bancaria.

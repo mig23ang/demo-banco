@@ -1,17 +1,16 @@
 package com.banco.demo.dao.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Data
@@ -27,7 +26,15 @@ public class CuentaBancariaEntity {
     @Size(min = 1, max = 100, message = "El titular debe tener entre 1 y 100 caracteres")
     private String titular;
 
+    @NotNull(message = "El saldo es obligatorio")
     private BigDecimal saldo;
 
     private LocalDateTime fechaCreacion;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.fechaCreacion == null) {
+            this.fechaCreacion = LocalDateTime.now();
+        }
+    }
 }

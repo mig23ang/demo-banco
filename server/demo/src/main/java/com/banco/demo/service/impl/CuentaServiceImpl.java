@@ -1,9 +1,15 @@
 package com.banco.demo.service.impl;
 
 import com.banco.demo.dao.entities.CuentaBancariaEntity;
+import com.banco.demo.dao.entities.Tipo;
+import com.banco.demo.dao.entities.TransaccionEntity;
 import com.banco.demo.dao.repositories.CuentaBancariaReposiroty;
+import com.banco.demo.dao.repositories.TransaccionRepository;
 import com.banco.demo.service.contract.ICuentaService;
+import com.banco.demo.utlis.ResourceNotFoundException;
+import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,55 +19,90 @@ import java.time.LocalDateTime;
 @Service
 public class CuentaServiceImpl implements ICuentaService {
 
+    private static Logger LOG = org.slf4j.LoggerFactory.getLogger(CuentaServiceImpl.class);
+
     @Autowired
     private CuentaBancariaReposiroty cuentaBancariaRepository;
 
+    @Autowired
+    private TransaccionRepository transaccionRepository;
+
     @Override
     public CuentaBancariaEntity crearCuenta(CuentaBancariaEntity cuenta) {
+        LOG.info("Inicia crear cuenta CuentaServiceImpl crearCuenta ", cuenta);
         if (cuenta.getSaldo() != null && cuenta.getSaldo().compareTo(BigDecimal.ZERO) != 0) {
             throw new IllegalArgumentException("El saldo inicial debe ser 0.");
         }
         if (cuenta.getTitular() == null || cuenta.getTitular().length() < 1 || cuenta.getTitular().length() > 100) {
             throw new IllegalArgumentException("El titular debe tener entre 1 y 100 caracteres.");
         }
-        cuenta.setFechaCreacion(LocalDateTime.now());
+        LOG.info("Finaliza crear cuenta CuentaServiceImpl crearCuenta ", cuenta);
         return cuentaBancariaRepository.save(cuenta);
+    }
+
+
+    @Override
+    @Transactional
+    public CuentaBancariaEntity depositar(Long id, TransaccionEntity transaccion) {
+        LOG.info("Inicia depositar cuenta CuentaServiceImpl depositar ", id, transaccion);
+        if (transaccion.getTipo() != Tipo.DEPOSITO) {
+            throw new IllegalArgumentException("El tipo de transacción debe ser DEPOSITO");
+        }
+
+
+        CuentaBancariaEntity cuenta = cuentaBancariaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cuenta bancaria no encontrada"));
+
+        BigDecimal nuevoSaldo = cuenta.getSaldo().add(transaccion.getMonto());
+        cuenta.setSaldo(nuevoSaldo);
+
+        cuentaBancariaRepository.save(cuenta);
+
+        transaccion.setCuentaBancaria(cuenta);
+        transaccion.setFecha(LocalDateTime.now());
+        transaccionRepository.save(transaccion);
+
+        LOG.info("Finaliza depositar cuenta CuentaServiceImpl depositar ", id, transaccion);
+        return cuenta;
     }
 
     @Override
-    public CuentaBancariaEntity depositar(Long id, @NotNull BigDecimal monto) {
-        if (monto.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("El monto de la consignación debe ser positivo.");
+    @Transactional
+    public CuentaBancariaEntity retirar(Long id, TransaccionEntity transaccion) {
+        LOG.info("Inicia retirar cuenta CuentaServiceImpl retirar {}", id);
+
+        if (transaccion.getTipo() != Tipo.RETIRO) {
+            throw new IllegalArgumentException("El tipo de transacción debe ser RETIRO");
         }
 
         CuentaBancariaEntity cuenta = cuentaBancariaRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Cuenta no encontrada."));
+                .orElseThrow(() -> new ResourceNotFoundException("Cuenta bancaria no encontrada"));
 
-        cuenta.setSaldo(cuenta.getSaldo().add(monto));
-        return cuentaBancariaRepository.save(cuenta);
-    }
-
-    @Override
-    public CuentaBancariaEntity retirar(Long id, @NotNull BigDecimal monto) {
-        if (monto.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("El monto del retiro debe ser positivo.");
+        // Verifica si hay saldo suficiente para el retiro
+        if (cuenta.getSaldo().compareTo(transaccion.getMonto()) < 0) {
+            throw new IllegalArgumentException("Saldo insuficiente para realizar el retiro");
         }
 
-        CuentaBancariaEntity cuenta = cuentaBancariaRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Cuenta no encontrada."));
+        BigDecimal nuevoSaldo = cuenta.getSaldo().subtract(transaccion.getMonto());
+        cuenta.setSaldo(nuevoSaldo);
 
-        if (cuenta.getSaldo().compareTo(monto) < 0) {
-            throw new IllegalArgumentException("Saldo insuficiente para el retiro.");
-        }
+        cuentaBancariaRepository.save(cuenta);
 
-        cuenta.setSaldo(cuenta.getSaldo().subtract(monto));
-        return cuentaBancariaRepository.save(cuenta);
+        transaccion.setCuentaBancaria(cuenta);
+        transaccion.setFecha(LocalDateTime.now());
+        transaccionRepository.save(transaccion);
+
+        LOG.info("Finaliza retirar cuenta CuentaServiceImpl retirar {}", id);
+        return cuenta;
     }
+
 
     @Override
     public BigDecimal consultarSaldo(Long id) {
+        LOG.info("Inicia consultar saldo CuentaServiceImpl consultarSaldo ", id);
         CuentaBancariaEntity cuenta = cuentaBancariaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Cuenta no encontrada."));
+        LOG.info("Finaliza consultar saldo CuentaServiceImpl consultarSaldo ", id);
         return cuenta.getSaldo();
     }
 }

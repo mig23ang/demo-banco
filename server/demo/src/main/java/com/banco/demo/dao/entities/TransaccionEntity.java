@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -25,14 +26,11 @@ public class TransaccionEntity {
 
     @Enumerated(EnumType.STRING)
     @NotNull(message = "El tipo de transacción es obligatorio")
-    private TipoTransaccion tipo;
+    private Tipo tipo;
 
     @DecimalMin(value = "0.01", message = "El monto debe ser positivo")
     private BigDecimal monto;
 
-}
+    private LocalDateTime fecha;
 
-enum TipoTransaccion {
-    DEPOSITO,
-    RETIRO
 }
