@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/accounts")
+@CrossOrigin(origins = "http://localhost:3000")
 public class CuentaController {
 
     private static Logger LOG = org.slf4j.LoggerFactory.getLogger(CuentaServiceImpl.class);
