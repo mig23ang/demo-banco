@@ -1,38 +1,28 @@
-// src/components/Depositar.js
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Container, Form, Button, Alert } from 'react-bootstrap'; // Importa los componentes de Bootstrap
+import { Container, Form, Button, Alert } from 'react-bootstrap'; // Asegúrate de tener bootstrap instalado
 
 const Depositar = () => {
     const [id, setId] = useState('');
     const [monto, setMonto] = useState(0);
     const [alert, setAlert] = useState(null);
-    const [titular, setTitular] = useState('');
-    const [saldo, setSaldo] = useState(0);
-    const [fechaCreacion, setFechaCreacion] = useState('');
+    const [resultado, setResultado] = useState(null);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
         try {
-            await axios.post(`http://localhost:8080/accounts/${id}/deposit`, {
-                id: Number(id),
-                cuentaBancaria: {
-                    id: Number(id),
-                    titular: titular,
-                    saldo: Number(saldo),
-                    fechaCreacion: fechaCreacion
-                },
-                tipo: 'DEPOSITO', // Valor fijo
+            const response = await axios.post(`http://localhost:8080/accounts/${id}/deposit`, {
+                tipo: 'DEPOSITO', // Asegúrate de que el tipo sea DEPOSITO
                 monto: Number(monto),
-                fecha: new Date().toISOString() // Fecha actual
+                // La fecha será asignada automáticamente en el backend
             });
+
+            setResultado(response.data); // Guarda el objeto devuelto por el endpoint
             setAlert({ type: 'success', message: 'Depósito realizado con éxito' });
             // Limpiar campos después de la operación
             setId('');
             setMonto(0);
-            setTitular('');
-            setSaldo(0);
-            setFechaCreacion('');
         } catch (error) {
             console.error('Error al realizar el depósito:', error);
             setAlert({ type: 'danger', message: 'Error al realizar el depósito' });
@@ -58,33 +48,6 @@ const Depositar = () => {
                     />
                 </Form.Group>
                 <Form.Group className="mb-3">
-                    <Form.Label>Titular de la cuenta</Form.Label>
-                    <Form.Control
-                        type="text"
-                        value={titular}
-                        onChange={(e) => setTitular(e.target.value)}
-                        required
-                    />
-                </Form.Group>
-                <Form.Group className="mb-3">
-                    <Form.Label>Saldo de la cuenta</Form.Label>
-                    <Form.Control
-                        type="number"
-                        value={saldo}
-                        onChange={(e) => setSaldo(e.target.value)}
-                        required
-                    />
-                </Form.Group>
-                <Form.Group className="mb-3">
-                    <Form.Label>Fecha de creación</Form.Label>
-                    <Form.Control
-                        type="datetime-local"
-                        value={fechaCreacion}
-                        onChange={(e) => setFechaCreacion(e.target.value)}
-                        required
-                    />
-                </Form.Group>
-                <Form.Group className="mb-3">
                     <Form.Label>Monto</Form.Label>
                     <Form.Control
                         type="number"
@@ -97,6 +60,12 @@ const Depositar = () => {
                     Depositar
                 </Button>
             </Form>
+            {resultado && (
+                <div className="mt-4">
+                    <h3>Resultado del Depósito</h3>
+                    <pre>{JSON.stringify(resultado, null, 2)}</pre>
+                </div>
+            )}
         </Container>
     );
 };

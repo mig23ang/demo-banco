@@ -1,4 +1,3 @@
-// src/components/Retirar.js
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Container, Form, Button, Alert } from 'react-bootstrap'; // Asegúrate de tener bootstrap instalado
@@ -6,25 +5,17 @@ import { Container, Form, Button, Alert } from 'react-bootstrap'; // Asegúrate 
 const Retirar = () => {
     const [id, setId] = useState('');
     const [monto, setMonto] = useState(0);
-    const [cuentaBancaria, setCuentaBancaria] = useState({
-        id: 1,
-        titular: 'Miguel Reyes',
-        saldo: 5,
-        fechaCreacion: '2024-08-05T00:00:00'
-    });
     const [alert, setAlert] = useState(null);
     const [resultado, setResultado] = useState(null);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         try {
             const response = await axios.post(`http://localhost:8080/accounts/${id}/withdraw`, {
-                id: Number(id),
-                cuentaBancaria: cuentaBancaria,
                 tipo: 'RETIRO', // Valor fijo para el tipo de operación
                 monto: Number(monto),
-                fecha: new Date().toISOString() // Fecha actual en formato ISO
+                // La fecha será asignada automáticamente en el backend
             });
 
             setResultado(response.data); // Guarda el objeto devuelto por el endpoint
@@ -57,52 +48,12 @@ const Retirar = () => {
                     />
                 </Form.Group>
                 <Form.Group className="mb-3">
-                    <Form.Label>Titular de la cuenta</Form.Label>
-                    <Form.Control
-                        type="text"
-                        value={cuentaBancaria.titular}
-                        readOnly
-                    />
-                </Form.Group>
-                <Form.Group className="mb-3">
-                    <Form.Label>Saldo</Form.Label>
-                    <Form.Control
-                        type="number"
-                        value={cuentaBancaria.saldo}
-                        readOnly
-                    />
-                </Form.Group>
-                <Form.Group className="mb-3">
-                    <Form.Label>Fecha de Creación</Form.Label>
-                    <Form.Control
-                        type="text"
-                        value={cuentaBancaria.fechaCreacion}
-                        readOnly
-                    />
-                </Form.Group>
-                <Form.Group className="mb-3">
                     <Form.Label>Monto</Form.Label>
                     <Form.Control
                         type="number"
                         value={monto}
                         onChange={(e) => setMonto(e.target.value)}
                         required
-                    />
-                </Form.Group>
-                <Form.Group className="mb-3">
-                    <Form.Label>Tipo</Form.Label>
-                    <Form.Control
-                        type="text"
-                        value="RETIRO" // Valor fijo
-                        readOnly
-                    />
-                </Form.Group>
-                <Form.Group className="mb-3">
-                    <Form.Label>Fecha</Form.Label>
-                    <Form.Control
-                        type="text"
-                        value={new Date().toISOString()} // Fecha actual en formato ISO
-                        readOnly
                     />
                 </Form.Group>
                 <Button variant="primary" type="submit">
